@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+
+void main() {
+  runApp(const SmartAccountingApp());
+}
+
+class SmartAccountingApp extends StatelessWidget {
+  const SmartAccountingApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'المحاسب الذكي',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+        fontFamily: 'Roboto',
+      ),
+      home: const MainNavigationScreen(),
+    );
+  }
+}
+
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({super.key});
+
+  @override
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+}
+
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  int _currentIndex = 0;
+
+  // قاعدة بيانات محلية (تخزين داخلي في الذاكرة)
+  final List<Map<String, dynamic>> _accounts = [
+    {'id': '1', 'name': 'الصندوق الرئيسي', 'type': 'أصول (Assets)', 'balance': 540000.0},
+    {'id': '2', 'name': 'بنك الكريمي', 'type': 'أصول (Assets)', 'balance': 1200000.0},
+    {'id': '3', 'name': 'شركة الأمل (عميل)', 'type': 'مدينون (العملاء)', 'balance': 450000.0, 'limit': 300000.0, 'overdue': true},
+    {'id': '4', 'name': 'مؤسسة النور (عميل)', 'type': 'مدينون (العملاء)', 'balance': 85000.0, 'limit': 200000.0, 'overdue': false},
+    {'id': '5', 'name': 'المورد التجاري (مورد)', 'type': 'دائنون (الموردين)', 'balance': 190000.0},
+    {'id': '6', 'name': 'المبيعات العامة', 'type': 'إيرادات (Revenue)', 'balance': 980000.0},
+  ];
+
+  final List<Map<String, dynamic>> _invoices = [];
+
+  void _addInvoice(Map<String, dynamic> invoice) {
+    setState(() {
+      _invoices.insert(0, invoice);
+      // تحديث الأرصدة تلقائياً
+      var acc = _accounts.firstWhere((a) => a['id'] == invoice['accountId']);
+      if (invoice['type'] == 'بيع') {
+        acc['balance'] += (invoice['total'] - invoice['paid']);
+      } else {
+        acc['balance'] += (invoice['total'] - invoice['paid']);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screens = [
+      DashboardTab(accounts: _accounts, invoices: _invoices),
+      InvoicesTab(accounts: _accounts, onSave: _addInvoice),
+      AccountsTab(accounts: _accounts),
+      const UsersQRTab(),
+    ];
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: screens[_currentIndex],
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          on
